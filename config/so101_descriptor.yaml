@@ -1,0 +1,28 @@
+# SO101 Robot Descriptor for RMPflow
+# This file describes the kinematic structure of the SO101 robot.
+# All names MUST EXACTLY match the names defined in the corresponding URDF file.
+
+api_version: 1.0
+
+# Configuration Space: List of all controllable (revolute/prismatic) joints for motion planning.
+# The gripper joint is excluded as it is controlled separately.
+cspace:
+  - shoulder_pan
+  - shoulder_lift
+  - elbow_flex
+  - wrist_flex
+  - wrist_roll
+
+# Default robot configuration. MUST have the same number of elements as cspace.
+default_q: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+# The root link of the robot's kinematic chain.
+root_link: "base_link"
+
+# The target link for the motion planner. RMPflow will control the pose of this link.
+# "wrist_link" is chosen as it is the last major link before the gripper assembly.
+# end_effector_name: "wrist_link"
+
+# Empty rules as per the working example.
+cspace_to_urdf_rules: []
+composite_task_spaces: []

@@ -1,0 +1,240 @@
+# SO101 场景配置文件
+# 完全对应大脚本中的参数设置
+
+simulation:
+  headless: false
+  stage_units_in_meters: 1.0
+
+# 场景物体配置
+scene:
+  # 橘子配置 - 智能避让版本
+  oranges:
+    count: 3
+    models: 
+      - "Orange001"
+      - "Orange002" 
+      - "Orange003"
+    usd_paths:
+      - "assets/objects/Orange001/Orange001.usd"
+      - "assets/objects/Orange002/Orange002.usd"
+      - "assets/objects/Orange003/Orange003.usd"
+    
+    # 橘子生成配置 - 双区域避让
+    generation:
+      # 基础生成范围（扩大以提高成功率）
+      x_range: [0.1, 0.35]       # X: 10cm到35cm
+      y_range: [-0.25, 0.25]     # Y: -25cm到25cm
+      z_drop_height: 0.05         # Z: 10cm高度
+      max_attempts: 50           # 每个橘子最大尝试次数
+      
+      # 禁用区域配置（双区域避让）
+      exclusion_zones:
+        # 机械臂避让区域（直臂朝前占用的空间）
+        - name: "robot_arm_zone"
+          type: "rectangle"
+          bounds:
+            x: [-0.1, 0.1]       # 机械臂X避让范围
+            y: [-0.05, 0.05]     # 机械臂Y避让范围（用户确认）
+            z: [0.0, 0.05]        # 机械臂Z避让范围
+        
+        # 盘子避让区域（圆形安全区域）
+        - name: "plate_zone"
+          type: "circle"
+          center_from: "plate_position"  # 从盘子位置自动获取
+          radius: 0.12           # 盘子避让半径12cm（盘子半径10cm + 2cm安全距离）
+          z: [0.0, 0.2]         # Z轴避让高度
+    
+    # 橘子物理属性
+    physics:
+      radius: 0.025             # 橘子半径2.5cm
+      height: 0.05              # 橘子高度5cm（用户确认大致准确）
+      mass: 0.15                # 橘子质量150g
+      min_distance: 0.06        # 橘子间最小距离6cm
+
+  # 盘子配置
+  plate:
+    model: "Plate"
+    usd_path: "assets/objects/Plate/Plate.usd"
+    position: [0.165, -0.15, 0.02]  # 对应args_cli.plate_pos默认值
+    scale: 1.0
+    use_virtual: true  # 对应大脚本中的虚拟盘子对象逻辑
+    virtual_config:
+      radius: 0.1               # 盘子半径10cm（用户确认）
+      height: 0.02
+      position: [0.165, -0.15, 0.005]  # 盘子更贴近地面
+
+# 智能放置系统配置（从smart_placement.py移除硬编码）
+placement:
+  # 工作空间边界
+  workspace_bounds:
+    x: [0.05, 0.3]             # X轴工作范围：5cm到45cm
+    y: [0.0, 0.2]            # Y轴工作范围：-30cm到30cm
+    z: [0.05, 0.05]             # Z轴工作范围：5cm到10cm
+  
+  # 机械臂避让区域（初始姿态占用区域）
+  robot_exclusion_zone:
+    x: [-0.1, 0.1]              # X轴避让范围：-10cm到10cm  
+    y: [-0.05, 0.05]            # Y轴避让范围：-5cm到5cm（用户确认）
+    z: [0.0, 0.05]               # Z轴避让范围：地面到50cm
+  
+  # 安全距离配置
+  safety_distances:
+    min_distance_between_objects: 0.03   # 物体间最小距离6cm
+    min_distance_from_edge: 0.02         # 距离边界最小距离5cm
+    min_distance_from_robot: 0.06        # 距离机械臂最小距离12cm
+    min_distance_from_plate: 0.12        # 距离盘子最小距离12cm（盘子半径10cm + 2cm安全距离）
+  
+  # 放置范围限制（避免IK无解）
+  placement_limits:
+    max_x_distance: 0.30                # X方向最大距离30cm
+    max_y_distance: 0.20                # Y方向最大距离20cm
+  
+  # 物体尺寸配置（用于碰撞检测）
+  object_sizes:
+    orange:
+      radius: 0.025             # 橘子半径2.5cm（从physics复制，保持一致）
+      height: 0.05              # 橘子高度5cm
+    plate:
+      radius: 0.10              # 盘子半径10cm（用户确认）
+      height: 0.02              # 盘子高度2cm
+    default:
+      radius: 0.05              # 默认物体半径5cm
+      height: 0.10              # 默认物体高度10cm
+  
+  # 机械臂基座位置（用于避让计算）
+  robot_base_position: [0.0, 0.0, 0.0]
+
+  # 环境设置
+  environment:
+    stage_units_in_meters: 1.0
+    ground_plane: true
+    lighting:
+      dome_light:
+        path: "/World/defaultLight"
+        intensity: 3000.0
+        color: [0.75, 0.75, 0.75]
+
+# 机器人配置
+robot:
+  # 机械臂名称
+  robot_name: "so101_robot"
+  model: "so101"
+  urdf_path: "assets/robots/so101_physics_generated/so101_new_calib.urdf"
+  descriptor_path: "config/so101_descriptor.yaml"
+  target_position: [0.25, 0.0, 0.2]  # 对应args_cli.target_pos默认值
+
+# 任务配置
+task:
+  name: "so101_follow_target"
+  type: "pick_and_place"
+  search_mode: false  # 对应 --no-search-mode 的反向
+  shoulder_pan_limit: 110.0  # 对应args_cli.shoulder_pan_limit
+
+# 摄像头配置
+cameras:
+  
+  front_camera:
+    position: [0.52, 0.0, 0.4]
+    orientation: [0.65328, 0.2706, 0.2706, 0.65328]  # (w, x, y, z)
+    focal_length: 28.7
+    horizontal_aperture: 38.11
+    vertical_aperture: 28.58
+    clipping_range: [0.01, 50.0]
+  
+  wrist_camera:
+    position:  [0.02, 0.2, 0.1]  # [0.02, 0.075, -0.025]
+    orientation: [0.93969, -0.34202, 0.0, 0.0]  # [0.96593, -0.25882, 0.0, 0.0]  # (w, x, y, z)
+    focal_length: 36.5
+    horizontal_aperture: 36.83
+    vertical_aperture: 27.62
+    clipping_range: [0.01, 50.0]
+
+# 数据收集配置
+data_collection:
+  enabled: true
+  output_path: "./datasets/so101_pickup_data.hdf5"
+
+# 目标配置 - 可视化设置
+target_configs:
+  "/World/orange1":
+    name: "orange1_object"
+    draw_aabb: true
+    aabb_color: [1.0, 1.0, 0.0, 0.5]  # 黄色半透明
+    draw_obb: true
+    obb_color: [0.0, 1.0, 1.0, 1.0]   # 青色不透明
+  "/World/orange2":
+    name: "orange2_object"
+    draw_aabb: true
+    aabb_color: [1.0, 1.0, 0.0, 0.5]  # 黄色半透明
+    draw_obb: true
+    obb_color: [0.0, 1.0, 1.0, 1.0]   # 青色不透明
+  "/World/orange3":
+    name: "orange3_object"
+    draw_aabb: true
+    aabb_color: [1.0, 1.0, 0.0, 0.5]  # 黄色半透明
+    draw_obb: true
+    obb_color: [0.0, 1.0, 1.0, 1.0]   # 青色不透明
+
+# 调试配置
+debug:
+  show_viz: false  # 对应args_cli.show_debug_viz
+  log_level: "INFO"
+  safe_print: true  # 对应大脚本的安全打印功能
+
+# 抓取检测配置 - 完全复制大脚本第2725-2766行的GRASP_DETECTION_CONFIG
+grasp_detection:
+  check_interval_frames: 10
+  failure_confirmation_frames: 10
+  grip_distance_threshold: 0.03
+  contact_force_threshold: 0.1
+  enable_smart_grasp_detection: true
+  grasp_success_xy_threshold: 0.05
+  grasp_success_z_threshold: 0.08
+  grasp_movement_ratio_threshold: 0.7
+  grasp_stability_frames: 10
+  placement_velocity_threshold: 0.08  # 8cm/s (更宽松)
+  placement_stability_frames: 120     # 4秒 (更长时间)
+  plate_placement_margin: 0.025
+  moving_jaw_path: "/World/so101_robot/moving_jaw_so101_v1_link"
+  fixed_jaw_path: "/World/so101_robot/gripper_link"
+  gripper_tip_offset: 0.08
+  gripper_tip_direction: "down"
+  enable_debug_logging: false
+  xy_distance_multiplier: 0.8
+  z_distance_multiplier: 1.5
+  enable_adaptive_z_threshold: true
+  xy_good_threshold_multiplier: 0.5
+  z_relaxed_multiplier: 2.0
+  enable_grasp_monitoring: true
+  monitoring_interval_frames: 5
+
+# 新增：盘子移动监控配置
+plate_monitoring:
+  enabled: true                  # 是否启用监控
+  position_threshold: 0.03       # 位置变化阈值 (米, 例如, 3厘米)
+  velocity_threshold: 0.1        # 速度阈值 (米/秒, 例如, 10厘米/秒)
+
+# 机械臂IK控制器配置
+ik_controller:
+  solver: "LMA"
+
+# 状态机控制参数
+state_machine_control:
+  # 抓取阶段
+  grasping:
+    # 夹爪闭合角度范围 (百分比, 0.0=全闭, 1.0=全开)
+    close_angle_percent_min: 0.18
+    close_angle_percent_max: 0.235
+    # 夹爪闭合时间 (秒)
+    close_duration_s: 0.5
+
+  # 移动速度
+  movement_speeds:
+    # 高空快速移动速度 (米/每物理步), 用于APPROACH, TRANSPORT, RETURN_HOME
+    travel_horizontal_step_m: 0.003
+
+    # 精细操作速度
+    # 下降速度 (米/每物理步), 建议慢速以确保精度
+    descend_step_m: 0.001
+    # 抬升速度 (米/每物理步), 可以稍快
+    lift_step_m: 0.002

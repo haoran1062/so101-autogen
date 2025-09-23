@@ -1,0 +1,25 @@
+# 核心依赖库
+# 注意: PyTorch 和 Isaac Sim 有特殊的安装要求，
+# 请遵循 README.md 中的安装指南进行安装。
+
+lerobot
+
+# HDF5 数据处理
+h5py==3.14.0
+
+# 图像处理与可视化
+opencv-python==4.8.1.78
+matplotlib==3.10.5
+
+# 数据与数值计算
+numpy==1.26.4
+pandas==2.3.1
+
+# YAML 配置文件解析
+PyYAML==6.0.2
+
+# 命令行进度条
+tqdm==4.67.1
+
+# 交互式脚本的键盘输入
+pynput==1.8.1

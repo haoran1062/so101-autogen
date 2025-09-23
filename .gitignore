@@ -1,0 +1,33 @@
+# User-specified directories
+reference/
+action_history/
+datasets/
+assets/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Testing cache
+.pytest_cache/
+.mypy_cache/
+tests/
+
+# Logs
+logs/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# IDE / Editor specific
+.vscode/
+.idea/
