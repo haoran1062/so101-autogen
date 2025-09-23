@@ -216,7 +216,7 @@ python scripts/action_history_visualizer.py
 
 - **作者**: Haoran Liu
 - **邮箱**: `haoranliu1062@gmail.com`
-- **GitHub**: [https://github.com/lihaoran1062](https://github.com/lihaoran1062)
+- **GitHub**: [https://github.com/haoran1062](https://github.com/haoran1062)
 
 ## 贡献与交流
 

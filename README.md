@@ -216,7 +216,7 @@ This project is intended for research and educational purposes only. It is not a
 
 - **Author**: Haoran Liu
 - **Email**: `haoranliu1062@gmail.com`
-- **GitHub**: [https://github.com/lihaoran1062](https://github.com/lihaoran1062)
+- **GitHub**: [https://github.com/haoran1062](https://github.com/haoran1062)
 
 ## Contribution and Community
 
