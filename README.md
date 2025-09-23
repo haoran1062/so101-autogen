@@ -22,7 +22,7 @@ My vision is to evolve this tool into an industrial-grade synthetic data generat
 -   **⚡️ High-Efficiency Conversion**: A multi-process script converts the generated HDF5 data into the LeRobot format in minutes.
 -   **🔧 Easily Configurable**: Scene parameters, object properties, and robot behaviors can be adjusted in a single YAML file.
 -   **🔬 Visualization Tools**: Includes scripts to visualize the collected HDF5 data and the action history of inference rollouts.
--   **🤖 End-to-End Workflow**: Provides a complete pipeline from data generation and conversion to policy training and inference examples.
+-   **🤖 End-to-End Workflow**: Provides a complete pipeline from **data generation** and **conversion** to **policy training** and **inference** examples.
 
 ## 🏗️ Project Structure
 
@@ -150,7 +150,7 @@ Here are examples of the camera data generated:
 
 **Step 4: Train a Policy (with LeRobot)**
 
-With your dataset converted and possibly uploaded to the Hugging Face Hub, you can now train a policy. The following is an example command using LeRobot's official tools.
+After your dataset is converted (and optionally uploaded to the Hugging Face Hub, the default option to push the dataset to HF is off, if you need to bring the parameters), you can now train a policy. Here is an example command using the official LeRobot tools.
 
 ```bash
 # This command should be run in your LeRobot training environment
