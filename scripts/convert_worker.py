@@ -214,6 +214,7 @@ def process_single_arm_data(dataset: 'LeRobotDataset', task: str, demo_group: h5
             "observation.images.front": front_images[frame_index],
             "observation.images.wrist": wrist_images[frame_index],
         }
+        # Let the conductor handle episode_index and global index during post-processing
         dataset.add_frame(frame=frame, task=task)
 
     return True
@@ -248,6 +249,7 @@ def process_bi_arm_data(dataset: 'LeRobotDataset', task: str, demo_group: h5py.G
             "observation.images.top": top_images[frame_index],
             "observation.images.right": right_images[frame_index],
         }
+        # Let the conductor handle episode_index and global index during post-processing
         dataset.add_frame(frame=frame, task=task)
 
     return True

@@ -7,8 +7,10 @@ import tempfile
 import shutil
 import json
 import numpy as np
+import pandas as pd
 # from tqdm import tqdm # MOVED
 # from lerobot.datasets.lerobot_dataset import LeRobotDataset # MOVED
+import pprint
 
 # Feature definition for the single-arm so101_follower configuration
 SINGLE_ARM_FEATURES = {
@@ -236,7 +238,7 @@ def run_worker_subprocess(args_tuple):
             '--repo-id', repo_id,
             '--robot-type', robot_type,
             '--fps', str(fps),
-            '--task', task
+            '--task', task,
         ]
         
         # We don't capture output in real-time here to allow workers to print errors directly
@@ -251,18 +253,20 @@ def run_worker_subprocess(args_tuple):
             f.write(result.stderr)
 
         if result.returncode == 0:
-            return True, result.stdout.strip()
+            # On success, return the original demo_name along with the output
+            return True, demo_name, result.stdout.strip(), output_dir
         else:
             print(f"\n--- Worker {worker_idx} for demo '{demo_name}' failed. ---")
             print(f"Stderr:\n{result.stderr}")
             print(f"Stdout:\n{result.stdout}")
             print(f"--------------------------------------------------")
-            return False, None
+            return False, demo_name, None, None
     except Exception as e:
         print(f"\n--- Worker {worker_idx} for demo '{demo_name}' failed with an exception in the conductor. ---")
         print(f"Exception: {e}")
         print(f"------------------------------------------------------------------------------------")
-        return False, None
+        return False, demo_name, None, None
+
 
 def main():
     """Main function that parses arguments and orchestrates the conversion process."""
@@ -391,18 +395,28 @@ def main():
         with multiprocessing.Pool(processes=args.num_workers) as pool:
             from tqdm import tqdm
             with tqdm(total=len(tasks), desc="Processing demos") as pbar:
-                for success, output_path in pool.imap_unordered(run_worker_subprocess, worker_args):
+                # Store results in a dictionary keyed by demo_name to preserve order
+                results = {}
+                for success, demo_name, output_json, output_dir in pool.imap_unordered(run_worker_subprocess, worker_args):
                     if success:
-                        successful_workers_outputs.append(output_path)
+                        # Store both the JSON payload and the path to the worker's output directory
+                        results[demo_name] = (output_json, output_dir)
                     pbar.update()
 
-        if not successful_workers_outputs:
+        # Sort the successful outputs based on the original task order
+        # The list will contain tuples of (demo_name, (output_json, output_dir))
+        successful_workers_info = []
+        for _, demo_name in tasks:
+            if demo_name in results:
+                successful_workers_info.append((demo_name, results[demo_name]))
+        
+        if not successful_workers_info:
             print("\nNo demos were processed successfully. Exiting.", file=sys.stderr)
             if temp_dir:
                 shutil.rmtree(temp_dir)
             return
     
-        print(f"\nSuccessfully processed {len(successful_workers_outputs)} demos.\n")
+        print(f"\nSuccessfully processed {len(successful_workers_info)} demos.\n")
 
 
     # --- Step 4: Merge results from workers ---
@@ -435,15 +449,50 @@ def main():
     final_dataset.meta.episodes_stats = []
     final_dataset.meta.episodes = []
 
-    # --- Manually merge all episodes from all successful workers ---
+    # --- Manually merge all episodes from all successful workers IN A SINGLE LOOP ---
     all_tasks = set()
+    global_frame_offset = 0
     from tqdm import tqdm
-    for episode_idx, worker_output_json in enumerate(tqdm(successful_workers_outputs, desc="Merging episodes")):
-        try:
-            worker_payload = json.loads(worker_output_json)
-            worker_root = worker_payload["root"]
+    # Sort by demo_name to ensure deterministic order
+    sorted_worker_info = sorted(successful_workers_info)
 
-            # --- Smartly find and move data/video files ---
+    for episode_idx, (demo_name, (worker_output_json, worker_output_dir)) in enumerate(tqdm(sorted_worker_info, desc="Merging and Correcting")):
+        try:
+            # --- Part A: Handle Metadata Correction ---
+            worker_payload = json.loads(worker_output_json)
+            
+            # 1. Start with the raw statistics from the worker, which has the correct format
+            worker_stats = { "episode_index": episode_idx, "stats": worker_payload["stats"] }
+            
+            # 2. Correct episode_index stats
+            worker_stats['stats']['episode_index']['min'] = [episode_idx]
+            worker_stats['stats']['episode_index']['max'] = [episode_idx]
+            worker_stats['stats']['episode_index']['mean'] = [float(episode_idx)]
+            worker_stats['stats']['episode_index']['std'] = [0.0]
+
+            # 3. Correct global index stats
+            num_frames = worker_stats['stats']['index']['count'][0]
+            min_index = global_frame_offset
+            max_index = global_frame_offset + num_frames - 1
+            worker_stats['stats']['index']['min'] = [min_index]
+            worker_stats['stats']['index']['max'] = [max_index]
+            worker_stats['stats']['index']['mean'] = [(min_index + max_index) / 2.0]
+            if 'frame_index' in worker_stats['stats']:
+                 worker_stats['stats']['index']['std'] = worker_stats['stats']['frame_index']['std']
+            
+            final_dataset.meta.episodes_stats.append(worker_stats)
+
+            # 4. Store the main episode info
+            final_dataset.meta.episodes.append({
+                "episode_index": episode_idx,
+                "length": worker_payload["length"],
+                "tasks": worker_payload["tasks"],
+            })
+            for task_name in worker_payload["tasks"]:
+                all_tasks.add(task_name)
+
+            # --- Part B: Find and move data/video files ---
+            worker_root = worker_payload["root"]
             found_parquet = None
             found_videos = []
 
@@ -452,16 +501,11 @@ def main():
                     if filename.endswith('.parquet'):
                         found_parquet = os.path.join(dirpath, filename)
                     elif filename.endswith('.mp4'):
-                        # Camera name is the name of the parent directory of the video file
                         camera_name = os.path.basename(dirpath)
-                        found_videos.append({
-                            "path": os.path.join(dirpath, filename),
-                            "camera": camera_name
-                        })
+                        found_videos.append({"path": os.path.join(dirpath, filename), "camera": camera_name})
             
-            # 1. Move the data file (.parquet)
+            # 3. Move and correct the data file (.parquet)
             if found_parquet:
-                # Determine the correct chunk directory and filename
                 chunk_idx = episode_idx // CHUNK_SIZE
                 chunk_dir = os.path.join(final_data_dir, f'chunk-{chunk_idx:03d}')
                 os.makedirs(chunk_dir, exist_ok=True)
@@ -469,16 +513,19 @@ def main():
                 episode_filename = f'episode_{episode_idx:06d}.parquet'
                 dest_parquet = os.path.join(chunk_dir, episode_filename)
                 shutil.move(found_parquet, dest_parquet)
+
+                # Correct the parquet file in its final destination
+                df = pd.read_parquet(dest_parquet)
+                df['episode_index'] = episode_idx
+                df['index'] = np.arange(global_frame_offset, global_frame_offset + len(df))
+                df.to_parquet(dest_parquet)
             else:
                 print(f"Warning: No .parquet file found for worker output: {worker_root}")
-                continue # Skip this episode if data is missing
+                continue
 
-            # 2. Move the video files (.mp4)
+            # 4. Move the video files (.mp4)
             for video_info in found_videos:
-                # Determine the correct chunk directory and filename for videos
                 chunk_idx = episode_idx // CHUNK_SIZE
-                
-                # Videos have an additional camera name directory
                 chunk_dir = os.path.join(final_videos_dir, f'chunk-{chunk_idx:03d}')
                 final_cam_dir = os.path.join(chunk_dir, video_info["camera"])
                 os.makedirs(final_cam_dir, exist_ok=True)
@@ -487,18 +534,8 @@ def main():
                 dest_video = os.path.join(final_cam_dir, episode_filename)
                 shutil.move(video_info["path"], dest_video)
             
-            # 3. Append the metadata to the final dataset's internal state
-            final_dataset.meta.episodes_stats.append({
-                "episode_index": episode_idx,
-                "stats": worker_payload["stats"]
-            })
-            final_dataset.meta.episodes.append({
-                "episode_index": episode_idx,
-                "length": worker_payload["length"],
-                "tasks": worker_payload["tasks"],
-            })
-            for task_name in worker_payload["tasks"]:
-                all_tasks.add(task_name)
+            # 6. Update the global offset for the next episode
+            global_frame_offset += worker_payload["length"]
 
         except (json.JSONDecodeError, KeyError) as e:
             print(f"Warning: Could not parse worker output. Skipping. Error: {e}. Output: '{worker_output_json}'")
@@ -530,7 +567,7 @@ def main():
         "total_videos": num_episodes * num_cameras,
         "total_chunks": (num_episodes + CHUNK_SIZE - 1) // CHUNK_SIZE,
         "chunks_size": CHUNK_SIZE,
-        "fps": args.fps,
+        "fps": float(args.fps),
         "splits": {
             "train": f"0:{num_episodes}"
         },
@@ -542,6 +579,9 @@ def main():
     # Add the duplicated 'info' key to video features, mimicking the reference file
     for key, value in info["features"].items():
         if value["dtype"] == "video":
+            # Ensure fps is a float in the feature definition as well
+            if "video.fps" in value["video_info"]:
+                value["video_info"]["video.fps"] = float(value["video_info"]["video.fps"])
             value["info"] = value["video_info"]
 
     with open(os.path.join(meta_dir, "info.json"), "w") as f:
