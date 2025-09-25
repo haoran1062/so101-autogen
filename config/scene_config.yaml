@@ -1,13 +1,12 @@
-# SO101 场景配置文件
-# 完全对应大脚本中的参数设置
+# SO101 Scene Configuration File
 
 simulation:
   headless: false
   stage_units_in_meters: 1.0
 
-# 场景物体配置
+# Scene Object Configuration
 scene:
-  # 橘子配置 - 智能避让版本
+  # Oranges Configuration - Smart Avoidance Version
   oranges:
     count: 3
     models: 
@@ -19,92 +18,92 @@ scene:
       - "assets/objects/Orange002/Orange002.usd"
       - "assets/objects/Orange003/Orange003.usd"
     
-    # 橘子生成配置 - 双区域避让
+    # Orange Generation Configuration - Dual-Zone Avoidance
     generation:
-      # 基础生成范围（扩大以提高成功率）
-      x_range: [0.1, 0.35]       # X: 10cm到35cm
-      y_range: [-0.25, 0.25]     # Y: -25cm到25cm
-      z_drop_height: 0.05         # Z: 10cm高度
-      max_attempts: 50           # 每个橘子最大尝试次数
+      # Base generation range (expanded to increase success rate)
+      x_range: [0.1, 0.35]       # X: 10cm to 35cm
+      y_range: [-0.25, 0.25]     # Y: -25cm to 25cm
+      z_drop_height: 0.05        # Z: 5cm height
+      max_attempts: 50           # Maximum attempts per orange
       
-      # 禁用区域配置（双区域避让）
+      # Exclusion Zones Configuration (Dual-Zone Avoidance)
       exclusion_zones:
-        # 机械臂避让区域（直臂朝前占用的空间）
+        # Robot arm exclusion zone (space occupied when the arm is straight forward)
         - name: "robot_arm_zone"
           type: "rectangle"
           bounds:
-            x: [-0.1, 0.1]       # 机械臂X避让范围
-            y: [-0.05, 0.05]     # 机械臂Y避让范围（用户确认）
-            z: [0.0, 0.05]        # 机械臂Z避让范围
+            x: [-0.1, 0.1]       # Robot arm X exclusion range
+            y: [-0.05, 0.05]     # Robot arm Y exclusion range (user confirmed)
+            z: [0.0, 0.05]       # Robot arm Z exclusion range
         
-        # 盘子避让区域（圆形安全区域）
+        # Plate exclusion zone (circular safety area)
         - name: "plate_zone"
           type: "circle"
-          center_from: "plate_position"  # 从盘子位置自动获取
-          radius: 0.12           # 盘子避让半径12cm（盘子半径10cm + 2cm安全距离）
-          z: [0.0, 0.2]         # Z轴避让高度
+          center_from: "plate_position"  # Automatically get from plate position
+          radius: 0.12           # Plate exclusion radius 12cm (plate radius 10cm + 2cm safety margin)
+          z: [0.0, 0.2]          # Z-axis exclusion height
     
-    # 橘子物理属性
+    # Orange Physics Properties
     physics:
-      radius: 0.025             # 橘子半径2.5cm
-      height: 0.05              # 橘子高度5cm（用户确认大致准确）
-      mass: 0.15                # 橘子质量150g
-      min_distance: 0.06        # 橘子间最小距离6cm
+      radius: 0.025             # Orange radius 2.5cm
+      height: 0.05              # Orange height 5cm (user confirmed as approximately correct)
+      mass: 0.15                # Orange mass 150g
+      min_distance: 0.06        # Minimum distance between oranges 6cm
 
-  # 盘子配置
+  # Plate Configuration
   plate:
     model: "Plate"
     usd_path: "assets/objects/Plate/Plate.usd"
-    position: [0.165, -0.15, 0.02]  # 对应args_cli.plate_pos默认值
+    position: [0.165, -0.15, 0.02]  # Corresponds to the default value of args_cli.plate_pos
     scale: 1.0
-    use_virtual: true  # 对应大脚本中的虚拟盘子对象逻辑
+    use_virtual: true  # Corresponds to the virtual plate object logic in the main script
     virtual_config:
-      radius: 0.1               # 盘子半径10cm（用户确认）
+      radius: 0.1               # Plate radius 10cm (user confirmed)
       height: 0.02
-      position: [0.165, -0.15, 0.005]  # 盘子更贴近地面
+      position: [0.165, -0.15, 0.005]  # Plate is closer to the ground
 
-# 智能放置系统配置（从smart_placement.py移除硬编码）
+# Smart Placement System Configuration (hardcoded values removed from smart_placement.py)
 placement:
-  # 工作空间边界
+  # Workspace Bounds
   workspace_bounds:
-    x: [0.05, 0.3]             # X轴工作范围：5cm到45cm
-    y: [0.0, 0.2]            # Y轴工作范围：-30cm到30cm
-    z: [0.05, 0.05]             # Z轴工作范围：5cm到10cm
+    x: [0.05, 0.3]             # X-axis working range: 5cm to 30cm
+    y: [0.0, 0.2]              # Y-axis working range: 0cm to 20cm
+    z: [0.05, 0.05]            # Z-axis working range: 5cm
   
-  # 机械臂避让区域（初始姿态占用区域）
+  # Robot Arm Exclusion Zone (area occupied by initial pose)
   robot_exclusion_zone:
-    x: [-0.1, 0.1]              # X轴避让范围：-10cm到10cm  
-    y: [-0.05, 0.05]            # Y轴避让范围：-5cm到5cm（用户确认）
-    z: [0.0, 0.05]               # Z轴避让范围：地面到50cm
+    x: [-0.1, 0.1]              # X-axis exclusion range: -10cm to 10cm  
+    y: [-0.05, 0.05]            # Y-axis exclusion range: -5cm to 5cm (user confirmed)
+    z: [0.0, 0.05]              # Z-axis exclusion range: ground to 5cm
   
-  # 安全距离配置
+  # Safety Distance Configuration
   safety_distances:
-    min_distance_between_objects: 0.03   # 物体间最小距离6cm
-    min_distance_from_edge: 0.02         # 距离边界最小距离5cm
-    min_distance_from_robot: 0.06        # 距离机械臂最小距离12cm
-    min_distance_from_plate: 0.12        # 距离盘子最小距离12cm（盘子半径10cm + 2cm安全距离）
+    min_distance_between_objects: 0.03   # Minimum distance between objects 3cm
+    min_distance_from_edge: 0.02         # Minimum distance from edge 2cm
+    min_distance_from_robot: 0.06        # Minimum distance from robot 6cm
+    min_distance_from_plate: 0.12        # Minimum distance from plate 12cm (plate radius 10cm + 2cm safety margin)
   
-  # 放置范围限制（避免IK无解）
+  # Placement Limits (to avoid IK failures)
   placement_limits:
-    max_x_distance: 0.30                # X方向最大距离30cm
-    max_y_distance: 0.20                # Y方向最大距离20cm
+    max_x_distance: 0.30                # Max X-direction distance 30cm
+    max_y_distance: 0.20                # Max Y-direction distance 20cm
   
-  # 物体尺寸配置（用于碰撞检测）
+  # Object Size Configuration (for collision detection)
   object_sizes:
     orange:
-      radius: 0.025             # 橘子半径2.5cm（从physics复制，保持一致）
-      height: 0.05              # 橘子高度5cm
+      radius: 0.025             # Orange radius 2.5cm (copied from physics for consistency)
+      height: 0.05              # Orange height 5cm
     plate:
-      radius: 0.10              # 盘子半径10cm（用户确认）
-      height: 0.02              # 盘子高度2cm
+      radius: 0.10              # Plate radius 10cm (user confirmed)
+      height: 0.02              # Plate height 2cm
     default:
-      radius: 0.05              # 默认物体半径5cm
-      height: 0.10              # 默认物体高度10cm
+      radius: 0.05              # Default object radius 5cm
+      height: 0.10              # Default object height 10cm
   
-  # 机械臂基座位置（用于避让计算）
+  # Robot Base Position (for avoidance calculation)
   robot_base_position: [0.0, 0.0, 0.0]
 
-  # 环境设置
+  # Environment Settings
   environment:
     stage_units_in_meters: 1.0
     ground_plane: true
@@ -114,23 +113,23 @@ placement:
         intensity: 3000.0
         color: [0.75, 0.75, 0.75]
 
-# 机器人配置
+# Robot Configuration
 robot:
-  # 机械臂名称
+  # Robot name
   robot_name: "so101_robot"
   model: "so101"
   urdf_path: "assets/robots/so101_physics_generated/so101_new_calib.urdf"
   descriptor_path: "config/so101_descriptor.yaml"
-  target_position: [0.25, 0.0, 0.2]  # 对应args_cli.target_pos默认值
+  target_position: [0.25, 0.0, 0.2]  # Corresponds to the default value of args_cli.target_pos
 
-# 任务配置
+# Task Configuration
 task:
   name: "so101_follow_target"
   type: "pick_and_place"
-  search_mode: false  # 对应 --no-search-mode 的反向
-  shoulder_pan_limit: 110.0  # 对应args_cli.shoulder_pan_limit
+  search_mode: false  # Inverse of --no-search-mode
+  shoulder_pan_limit: 110.0  # Corresponds to args_cli.shoulder_pan_limit
 
-# 摄像头配置
+# Camera Configuration
 cameras:
   
   front_camera:
@@ -149,39 +148,39 @@ cameras:
     vertical_aperture: 27.62
     clipping_range: [0.01, 50.0]
 
-# 数据收集配置
+# Data Collection Configuration
 data_collection:
   enabled: true
   output_path: "./datasets/so101_pickup_data.hdf5"
 
-# 目标配置 - 可视化设置
+# Target Configuration - Visualization Settings
 target_configs:
   "/World/orange1":
     name: "orange1_object"
     draw_aabb: true
-    aabb_color: [1.0, 1.0, 0.0, 0.5]  # 黄色半透明
+    aabb_color: [1.0, 1.0, 0.0, 0.5]  # Yellow, translucent
     draw_obb: true
-    obb_color: [0.0, 1.0, 1.0, 1.0]   # 青色不透明
+    obb_color: [0.0, 1.0, 1.0, 1.0]   # Cyan, opaque
   "/World/orange2":
     name: "orange2_object"
     draw_aabb: true
-    aabb_color: [1.0, 1.0, 0.0, 0.5]  # 黄色半透明
+    aabb_color: [1.0, 1.0, 0.0, 0.5]  # Yellow, translucent
     draw_obb: true
-    obb_color: [0.0, 1.0, 1.0, 1.0]   # 青色不透明
+    obb_color: [0.0, 1.0, 1.0, 1.0]   # Cyan, opaque
   "/World/orange3":
     name: "orange3_object"
     draw_aabb: true
-    aabb_color: [1.0, 1.0, 0.0, 0.5]  # 黄色半透明
+    aabb_color: [1.0, 1.0, 0.0, 0.5]  # Yellow, translucent
     draw_obb: true
-    obb_color: [0.0, 1.0, 1.0, 1.0]   # 青色不透明
+    obb_color: [0.0, 1.0, 1.0, 1.0]   # Cyan, opaque
 
-# 调试配置
+# Debug Configuration
 debug:
-  show_viz: false  # 对应args_cli.show_debug_viz
+  show_viz: false  # Corresponds to args_cli.show_debug_viz
   log_level: "INFO"
-  safe_print: true  # 对应大脚本的安全打印功能
+  safe_print: true  # Corresponds to the safe print function in the main script
 
-# 抓取检测配置 - 完全复制大脚本第2725-2766行的GRASP_DETECTION_CONFIG
+# Grasp Detection Configuration
 grasp_detection:
   check_interval_frames: 10
   failure_confirmation_frames: 10
@@ -192,8 +191,8 @@ grasp_detection:
   grasp_success_z_threshold: 0.08
   grasp_movement_ratio_threshold: 0.7
   grasp_stability_frames: 10
-  placement_velocity_threshold: 0.08  # 8cm/s (更宽松)
-  placement_stability_frames: 120     # 4秒 (更长时间)
+  placement_velocity_threshold: 0.08  # 8cm/s (more lenient)
+  placement_stability_frames: 120     # 4 seconds (longer duration)
   plate_placement_margin: 0.025
   moving_jaw_path: "/World/so101_robot/moving_jaw_so101_v1_link"
   fixed_jaw_path: "/World/so101_robot/gripper_link"
@@ -208,33 +207,34 @@ grasp_detection:
   enable_grasp_monitoring: true
   monitoring_interval_frames: 5
 
-# 新增：盘子移动监控配置
+# New: Plate Movement Monitoring Configuration
 plate_monitoring:
-  enabled: true                  # 是否启用监控
-  position_threshold: 0.03       # 位置变化阈值 (米, 例如, 3厘米)
-  velocity_threshold: 0.1        # 速度阈值 (米/秒, 例如, 10厘米/秒)
+  enabled: true                  # Whether to enable monitoring
+  position_threshold: 0.03       # Position change threshold (meters, e.g., 3cm)
+  velocity_threshold: 0.1        # Velocity threshold (m/s, e.g., 10cm/s)
 
-# 机械臂IK控制器配置
+# Robot IK Controller Configuration
 ik_controller:
   solver: "LMA"
 
-# 状态机控制参数
+# State Machine Control Parameters
 state_machine_control:
-  # 抓取阶段
+  # Grasping Phase
   grasping:
-    # 夹爪闭合角度范围 (百分比, 0.0=全闭, 1.0=全开)
+    # Gripper close angle range (percentage, 0.0=fully closed, 1.0=fully open)
     close_angle_percent_min: 0.18
     close_angle_percent_max: 0.235
-    # 夹爪闭合时间 (秒)
-    close_duration_s: 0.5
-
-  # 移动速度
+    # Gripper close duration (seconds)
+    close_duration_s: 0.75
+    # Duration to wait after grasping for the object to settle, in seconds
+    settle_duration_s: 0.35
+  # Movement Speeds
   movement_speeds:
-    # 高空快速移动速度 (米/每物理步), 用于APPROACH, TRANSPORT, RETURN_HOME
+    # High-altitude fast movement speed (m/physics step), for APPROACH, TRANSPORT, RETURN_HOME
     travel_horizontal_step_m: 0.003
 
-    # 精细操作速度
-    # 下降速度 (米/每物理步), 建议慢速以确保精度
+    # Fine Operation Speeds
+    # Descend speed (m/physics step), slow speed is recommended for precision
     descend_step_m: 0.001
-    # 抬升速度 (米/每物理步), 可以稍快
+    # Lift speed (m/physics step), can be slightly faster
     lift_step_m: 0.002
