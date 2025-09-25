@@ -206,7 +206,9 @@ python scripts/action_history_visualizer.py
 
 ## 🙏 Acknowledgements
 
-This project was made possible by the incredible work of the teams behind **[LeRobot](https://github.com/huggingface/lerobot)** and **[LeIsaac](https://github.com/LightwheelAI/leisaac)**. Our framework is heavily inspired by their design principles and incorporates modified code from their repositories. We are especially grateful to the `LeIsaac` project for providing the high-quality USD assets (oranges and plate) used in our example scene.
+*   The 3D assets for the oranges and the plate were adapted from the **[leisaac](https://github.com/NVIDIA-Omniverse/IsaacSim-Robotics-Foundation-Group/tree/main/leisaac)** project. We would like to extend our thanks to **[Lightwheel AI](https://www.lightwheel.ai/)** for providing these high-quality, Sim-Ready 3D assets. They offer a great collection of free and premium assets for robotics simulation, which you can explore at [Lightwheel Assets List](https://www.lightwheel.ai/assets-list) and [SimReady.com](https://simready.com/). If you use their assets in your projects, please consider citing them, just as we do in this project, using the following format:
+  > Lightwheel (2025). Lightwheel Sim-Ready Assets: High-Quality USD Assets for NVIDIA Isaac Sim. Version v1. Available at: https://github.com/LightwheelAI/Lightwheel-simready-asset
+*   This project was also made possible by the incredible work of the team behind **[LeRobot](https://github.com/huggingface/lerobot)**. Our framework is heavily inspired by their design principles and incorporates modified code from their repository.
 
 ## 📜 Disclaimer
 

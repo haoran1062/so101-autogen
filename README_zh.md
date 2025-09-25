@@ -206,7 +206,9 @@ python scripts/action_history_visualizer.py
 
 ## 🙏 致谢
 
-本项目的实现得益于 **[LeRobot](https://github.com/huggingface/lerobot)** 和 **[LeIsaac](https://github.com/LightwheelAI/leisaac)** 团队的杰出工作。我们的框架深受其设计理念的启发，并整合了其仓库中的部分修改代码。我们特别感谢 `LeIsaac` 项目为我们的示例场景提供了高质量的 USD 资源（橙子和盘子）。
+*   本项目中使用的橘子和盘子的3D资产改编自 **[leisaac](https://github.com/NVIDIA-Omniverse/IsaacSim-Robotics-Foundation-Group/tree/main/leisaac)** 项目。我们在此特别感谢 **[光轮智能 (Lightwheel AI)](https://www.lightwheel.ai/)** 提供了这些高质量、仿真就绪 (Sim-Ready) 的3D资产。他们为机器人仿真提供了大量免费和付费的优质资产，您可以在 [Lightwheel 资产列表](https://www.lightwheel.ai/assets-list) 和 [SimReady.com](https://simready.com/) 上浏览和下载。如果您也在您的项目中使用他们的资产，请考虑像本项目一样，按照以下格式进行引用：
+  > Lightwheel (2025). Lightwheel Sim-Ready Assets: High-Quality USD Assets for NVIDIA Isaac Sim. Version v1. Available at: https://github.com/LightwheelAI/Lightwheel-simready-asset
+*   本项目的实现还得益于 **[LeRobot](https://github.com/huggingface/lerobot)** 团队的杰出工作。我们的框架深受其设计理念的启发，并整合了其仓库中的部分修改代码。
 
 ## 📜 免责声明
 
