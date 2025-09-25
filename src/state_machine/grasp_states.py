@@ -20,6 +20,7 @@ class SimpleGraspingState(Enum):
     POSTURE_ADJUST = "posture_adjust" # Posture Adjust - align the gripper to be vertical (descends directly on failure)
     DESCEND = "descend"              # Descend - lower to grasping height
     GRASP = "grasp"                  # Grasp - close the gripper
+    GRASP_SETTLE = "grasp_settle"    # Grasp Settle - wait for the grasp to stabilize
     LIFT = "lift"                    # Lift - lift the object
     RETREAT = "retreat"              # Retreat - move to a safe position
     TRANSPORT = "transport"          # Transport - move over the plate (with linear descent)
@@ -39,6 +40,7 @@ class SimpleGraspingState(Enum):
             self.POSTURE_ADJUST: "Adjusting Posture",
             self.DESCEND: "Descending to Grasp",
             self.GRASP: "Executing Grasp",
+            self.GRASP_SETTLE: "Settling Grasp",
             self.LIFT: "Lifting Object",
             self.RETREAT: "Moving to Safe Position",
             self.TRANSPORT: "Transporting Object",

@@ -112,6 +112,7 @@ class SimpleGraspingStateMachine:
         self.max_posture_adjust_steps = 180   # Max steps for posture adjustment (3s @ 60FPS)
         self.max_descend_steps = 600          # Max steps for descent (10s) - increased for slower descent
         self.grasp_duration_steps = int(grasp_config.get('close_duration_s', 1.5) * 60) # Grasp duration
+        self.grasp_settle_duration_steps = int(grasp_config.get('settle_duration_s', 0.5) * 60) # Grasp settle time
         self.release_duration_steps = 180     # Release duration (6s) - more time for the object to stabilize
         
         # Load speed parameters from config
@@ -396,6 +397,8 @@ class SimpleGraspingStateMachine:
             self._update_descend_state()
         elif self.current_state == SimpleGraspingState.GRASP:
             self._update_grasp_state()
+        elif self.current_state == SimpleGraspingState.GRASP_SETTLE:
+            self._update_grasp_settle_state()
         elif self.current_state == SimpleGraspingState.LIFT:
             self._update_lift_state()
         elif self.current_state == SimpleGraspingState.RETREAT:
@@ -694,6 +697,11 @@ class SimpleGraspingStateMachine:
             current_pos = (1.0 - progress) * self.grasp_start_pos + progress * self.grasp_end_pos
             self.gripper_controller.target_gripper_position = current_pos
         else:
+            self._transition_to_state(SimpleGraspingState.GRASP_SETTLE)
+            
+    def _update_grasp_settle_state(self):
+        """Updates the GRASP_SETTLE state - waits for a short period."""
+        if self.state_timer > self.grasp_settle_duration_steps:
             self._transition_to_state(SimpleGraspingState.LIFT)
             
     def _update_lift_state(self):
@@ -1069,14 +1077,48 @@ class SimpleGraspingStateMachine:
     def _record_data_collection_frame(self):
         """Records a data collection frame."""
         try:
-            # Get joint positions (6 dimensions)
+            # Get joint positions (state) - 实际的关节角度
             joint_positions = self.robot.get_joint_positions()[:6]
             
-            # Get action commands (current IK target converted to joint angles)
-            current_target = self.ik_controller.current_target_position
-            # This is a simplification; ideally, the target joint angles would be
-            # obtained from the IK solver. For now, we use the current joint positions as the action.
+            # Initialize actions with current joint positions as a fallback
             actions = joint_positions.copy()
+
+            # 1. Get action for the arm (joints 0-4) from IK solver
+            # This represents the *desired* arm joint angles for the current cartesian target.
+            ik_solution, ik_success = self.ik_controller.compute_ik(
+                current_joint_positions=joint_positions
+            )
+            
+            if ik_success:
+                # If IK solution is found, use it as the action for the arm.
+                actions[:5] = self.ik_controller.apply_posture_correction(ik_solution)
+
+            # 2. Get action for the gripper (joint 5) using the hybrid strategy
+            gripper_action = 0.0
+
+            # States where the intent is to HOLD the gripper tightly closed
+            holding_states = [
+                SimpleGraspingState.GRASP_SETTLE,
+                SimpleGraspingState.LIFT, 
+                SimpleGraspingState.RETREAT,
+                SimpleGraspingState.TRANSPORT
+            ]
+
+            if self.current_state == SimpleGraspingState.GRASP:
+                # STRATEGY 1: For the ACTIVE GRASPING phase, the action is the DYNAMIC, interpolated target.
+                # We recalculate the exact same logic from _update_grasp_state here.
+                progress = min(1.0, self.state_timer / self.grasp_duration_steps)
+                gripper_action = (1.0 - progress) * self.grasp_start_pos + progress * self.grasp_end_pos
+            
+            elif self.current_state in holding_states:
+                # STRATEGY 2: For HOLDING phases, the action is the FINAL intended closed position.
+                gripper_action = self.grasp_end_pos
+            
+            else:
+                # STRATEGY 3: For all other states, the action is to be fully OPEN.
+                gripper_action = self.gripper_controller.open_pos
+            
+            actions[5] = gripper_action
             
             # Get camera images (if the camera controller is available)
             front_image = None
